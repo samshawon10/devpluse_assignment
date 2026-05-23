@@ -1,4 +1,4 @@
-import { pool } from "../../config/db";
+import { query } from "../../config/db";
 import type { IssueRow, IssueStatus, IssueType } from "../../types";
 import { buildSetClause, buildWhereClause, createPlaceholders } from "../../utils/sql";
 
@@ -18,7 +18,7 @@ export const createIssue = async (
   type: IssueType,
   reporterId: number
 ): Promise<IssueRow> => {
-  const result = await pool.query<IssueRow>(
+  const result = await query<IssueRow>(
     `INSERT INTO issues (title, description, type, reporter_id)
      VALUES ($1, $2, $3, $4)
      RETURNING id, title, description, type, status, reporter_id, created_at, updated_at`,
@@ -29,7 +29,7 @@ export const createIssue = async (
 };
 
 export const findIssueById = async (id: number): Promise<IssueRow | null> => {
-  const result = await pool.query<IssueRow>(
+  const result = await query<IssueRow>(
     "SELECT id, title, description, type, status, reporter_id, created_at, updated_at FROM issues WHERE id = $1",
     [id]
   );
@@ -47,7 +47,7 @@ export const getIssues = async (
   ]);
   const orderDirection = sort === "oldest" ? "ASC" : "DESC";
 
-  const result = await pool.query<IssueRow>(
+  const result = await query<IssueRow>(
     `SELECT id, title, description, type, status, reporter_id, created_at, updated_at
      FROM issues
      ${clause}
@@ -65,7 +65,7 @@ export const getReportersByIds = async (ids: number[]): Promise<Map<number, Repo
 
   const uniqueIds = [...new Set(ids)];
   const placeholders = createPlaceholders(uniqueIds.length);
-  const result = await pool.query<Reporter>(
+  const result = await query<Reporter>(
     `SELECT id, name, role FROM users WHERE id IN (${placeholders})`,
     uniqueIds
   );
@@ -95,7 +95,7 @@ export const updateIssueFields = async (
 
   values.push(id);
 
-  const result = await pool.query<IssueRow>(
+  const result = await query<IssueRow>(
     `UPDATE issues
      SET ${setClause}
      WHERE id = $${values.length}
@@ -107,6 +107,6 @@ export const updateIssueFields = async (
 };
 
 export const deleteIssue = async (id: number): Promise<boolean> => {
-  const result = await pool.query("DELETE FROM issues WHERE id = $1", [id]);
+  const result = await query("DELETE FROM issues WHERE id = $1", [id]);
   return (result.rowCount ?? 0) > 0;
 };
