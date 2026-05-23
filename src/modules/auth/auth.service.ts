@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { pool } from "../../config/db";
-import { env } from "../../config/env";
+import { query } from "../../config/db";
+import { env, getJwtSecret } from "../../config/env";
 import type { PublicUser, UserRole, UserRow } from "../../types";
 
 export const toPublicUser = (user: UserRow): PublicUser => ({
@@ -14,7 +14,7 @@ export const toPublicUser = (user: UserRow): PublicUser => ({
 });
 
 export const findUserByEmail = async (email: string): Promise<UserRow | null> => {
-  const result = await pool.query<UserRow>("SELECT * FROM users WHERE email = $1", [
+  const result = await query<UserRow>("SELECT * FROM users WHERE email = $1", [
     email.toLowerCase()
   ]);
   return result.rows[0] ?? null;
@@ -27,7 +27,7 @@ export const createUser = async (
   role: UserRole
 ): Promise<PublicUser> => {
   const hashedPassword = await bcrypt.hash(password, env.bcryptSaltRounds);
-  const result = await pool.query<UserRow>(
+  const result = await query<UserRow>(
     `INSERT INTO users (name, email, password, role)
      VALUES ($1, $2, $3, $4)
      RETURNING id, name, email, password, role, created_at, updated_at`,
@@ -47,6 +47,6 @@ export const signToken = (user: PublicUser): string =>
       name: user.name,
       role: user.role
     },
-    env.jwtSecret,
+    getJwtSecret(),
     { expiresIn: env.jwtExpiresIn }
   );

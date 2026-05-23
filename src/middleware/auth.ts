@@ -1,7 +1,7 @@
 import type { NextFunction, Response } from "express";
 import jwt from "jsonwebtoken";
 import { StatusCodes } from "http-status-codes";
-import { env } from "../config/env";
+import { getJwtSecret } from "../config/env";
 import type { AuthUser, AuthenticatedRequest } from "../types";
 import { sendError } from "../utils/responses";
 
@@ -18,7 +18,7 @@ export const authenticate = (
   }
 
   try {
-    const decoded = jwt.verify(token, env.jwtSecret) as AuthUser;
+    const decoded = jwt.verify(token, getJwtSecret()) as AuthUser;
     req.user = {
       id: decoded.id,
       name: decoded.name,

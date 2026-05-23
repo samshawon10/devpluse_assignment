@@ -1,6 +1,17 @@
-import { Pool } from "pg";
-import { env } from "./env";
+import { Pool, type QueryResultRow } from "pg";
+import { getDatabaseUrl } from "./env";
 
-export const pool = new Pool({
-  connectionString: env.databaseUrl
-});
+let pool: Pool | null = null;
+
+const getPool = (): Pool => {
+  if (!pool) {
+    pool = new Pool({
+      connectionString: getDatabaseUrl()
+    });
+  }
+
+  return pool;
+};
+
+export const query = <Row extends QueryResultRow>(text: string, values?: unknown[]) =>
+  getPool().query<Row>(text, values);
